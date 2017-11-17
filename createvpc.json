@@ -121,14 +121,23 @@ Resources:
     Properties:
       VpcId:
         Ref: vpcSpinUp
+      RouteTableId:
+        DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+        Ref: igwSpinUp
       Tags:
       - Key: Name
         Value: Public Routing Table
   rtPrivate:
     Type: AWS::EC2::RouteTable
+    DependsOn: Ref: igwSpinUp
     Properties:
       VpcId:
         Ref: vpcSpinUp
+      RouteTableId:
+       DestinationCidrBlock: 0.0.0.0/0
+      GatewayId:
+       Ref: igwSpinUp
       Tags:
       - Key: Name
         Value: Private Routing Table
