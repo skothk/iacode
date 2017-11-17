@@ -1,218 +1,225 @@
-{
-"AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "3 zone/3 tier /24 subnet VPC configuration | Public/App/DB",
-    "Metadata": {
-
-    },
-    "Parameters": {
-    
-    },
-    "Mappings": {
-
-    },
-    "Conditions": {
-
-    },
-    "Resources": {
-        "vpcSpinUp": {
-          "Type": "AWS::EC2::VPC",
-          "Properties": {
-            "CidrBlock": "10.0.0.0/16",
-            "Tags" : [ { "Key" : "Name", "Value" : "vpcSpinUp" } ]
-          }
-        },
-        "snSpinUpPublicA": {
-          "Type": "AWS::EC2::Subnet",
-          "Properties": {
-            "AvailabilityZone": "eu-west-1a",
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "CidrBlock": "10.0.0.0/24",
-            "Tags" : [ { "Key" : "Name", "Value" : "Public Subnet Zone A" } ]
-          }
-        },
-        "snSpinUpPublicB": {
-          "Type": "AWS::EC2::Subnet",
-          "Properties": {
-            "AvailabilityZone": "eu-west-1b",
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "CidrBlock": "10.0.1.0/24",
-            "Tags" : [ { "Key" : "Name", "Value" : "Public Subnet Zone B" } ]
-          }
-        },
-        "snSpinUpPublicC": {
-          "Type": "AWS::EC2::Subnet",
-          "Properties": {
-            "AvailabilityZone": "eu-west-1c",
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "CidrBlock": "10.0.2.0/24",
-            "Tags" : [ { "Key" : "Name", "Value" : "Public Subnet Zone C" } ]
-          }
-        },
-        "snSpinUpAppA": {
-          "Type": "AWS::EC2::Subnet",
-          "Properties": {
-            "AvailabilityZone": "eu-west-1a",
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "CidrBlock": "10.0.10.0/24",
-            "Tags" : [ { "Key" : "Name", "Value" : "Private App Subnet Zone A" } ]
-          }
-        },
-        "snSpinUpAppB": {
-          "Type": "AWS::EC2::Subnet",
-          "Properties": {
-            "AvailabilityZone": "eu-west-1b",
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "CidrBlock": "10.0.11.0/24",
-            "Tags" : [ { "Key" : "Name", "Value" : "Private App Subnet Zone B" } ]
-          }
-        },
-        "snSpinUpAppC": {
-          "Type": "AWS::EC2::Subnet",
-          "Properties": {
-            "AvailabilityZone": "eu-west-1c",
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "CidrBlock": "10.0.12.0/24",
-            "Tags" : [ { "Key" : "Name", "Value" : "Private App Subnet Zone C" } ]
-          }
-        },
-        "snSpinUpDbA": {
-          "Type": "AWS::EC2::Subnet",
-          "Properties": {
-            "AvailabilityZone": "eu-west-1a",
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "CidrBlock": "10.0.20.0/24",
-            "Tags" : [ { "Key" : "Name", "Value" : "Private DB Subnet Zone A" } ]
-          }
-        },
-        "snSpinUpDbB": {
-          "Type": "AWS::EC2::Subnet",
-          "Properties": {
-            "AvailabilityZone": "eu-west-1b",
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "CidrBlock": "10.0.21.0/24",
-            "Tags" : [ { "Key" : "Name", "Value" : "Private DB Subnet Zone B" } ]
-          }
-        },
-        "snSpinUpDbC": {
-          "Type": "AWS::EC2::Subnet",
-          "Properties": {
-            "AvailabilityZone": "eu-west-1c",
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "CidrBlock": "10.0.22.0/24",
-            "Tags" : [ { "Key" : "Name", "Value" : "Private DB Subnet Zone C" } ]
-          }
-        },
-        "igwSpinUp": {
-          "Type": "AWS::EC2::InternetGateway",
-          "Properties": {
-            "Tags" : [ { "Key" : "Name", "Value" : "SpinUp VPC Internet Gateway" } ]
-          }
-        },
-        "AttachGateway": {
-          "Type": "AWS::EC2::VPCGatewayAttachment",
-          "Properties": {
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "InternetGatewayId": { "Ref": "igwSpinUp" }
-          }
-        },
-
-        "rtPublic": {
-          "Type": "AWS::EC2::RouteTable",
-          "Properties": {
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "Tags" : [ { "Key" : "Name", "Value" : "Public Routing Table" } ]
-          }
-        },
-         "rtPrivate": {
-          "Type": "AWS::EC2::RouteTable",
-          "Properties": {
-            "VpcId": { "Ref" : "vpcSpinUp" },
-            "Tags" : [ { "Key" : "Name", "Value" : "Private Routing Table" } ]
-          }
-        },
-        
-        "rtaSpinUpPublicA": {
-          "Type": "AWS::EC2::SubnetRouteTableAssociation",
-          "DependsOn" : ["rtPublic","snSpinUpPublicA"],
-          "Properties": {
-            "RouteTableId": {"Ref":"rtPublic"},
-            "SubnetId": {"Ref":"snSpinUpPublicA"}
-          }
-        },
-
-        "rtaSpinUpPublicB": {
-          "Type": "AWS::EC2::SubnetRouteTableAssociation",
-          "DependsOn" : ["rtPublic","snSpinUpPublicB"],
-          "Properties": {
-            "RouteTableId": {"Ref":"rtPublic"},
-            "SubnetId": {"Ref":"snSpinUpPublicB"}
-          }
-        },
-
-        "rtaSpinUpPublicC": {
-          "Type": "AWS::EC2::SubnetRouteTableAssociation",
-          "DependsOn" : ["rtPublic","snSpinUpPublicC"],
-          "Properties": {
-            "RouteTableId": {"Ref":"rtPublic"},
-            "SubnetId": {"Ref":"snSpinUpPublicC"}
-          }
-        },
-
-        "rtaSpinUpAppA": {
-          "Type": "AWS::EC2::SubnetRouteTableAssociation",
-          "DependsOn" : ["rtPublic","snSpinUpAppA"],
-          "Properties": {
-            "RouteTableId": {"Ref":"rtPrivate"},
-            "SubnetId": {"Ref":"snSpinUpAppA"}
-          }
-        },
-
-        "rtaSpinUpAppB": {
-          "Type": "AWS::EC2::SubnetRouteTableAssociation",
-          "DependsOn" : ["rtPublic","snSpinUpAppB"],
-          "Properties": {
-            "RouteTableId": {"Ref":"rtPrivate"},
-            "SubnetId": {"Ref":"snSpinUpAppB"}
-          }
-        },
-
-        "rtaSpinUpAppC": {
-          "Type": "AWS::EC2::SubnetRouteTableAssociation",
-          "DependsOn" : ["rtPublic","snSpinUpAppC"],
-          "Properties": {
-            "RouteTableId": {"Ref":"rtPrivate"},
-            "SubnetId": {"Ref":"snSpinUpAppC"}
-          }
-        },
-
-        "rtaSpinUpDbA": {
-          "Type": "AWS::EC2::SubnetRouteTableAssociation",
-          "DependsOn" : ["rtPublic","snSpinUpDbA"],
-          "Properties": {
-            "RouteTableId": {"Ref":"rtPrivate"},
-            "SubnetId": {"Ref":"snSpinUpDbA"}
-          }
-        },
-
-        "rtaSpinUpDbB": {
-          "Type": "AWS::EC2::SubnetRouteTableAssociation",
-          "DependsOn" : ["rtPublic","snSpinUpDbB"],
-          "Properties": {
-            "RouteTableId": {"Ref":"rtPrivate"},
-            "SubnetId": {"Ref":"snSpinUpDbB"}
-          }
-        },
-
-        "rtaSpinUpDbC": {
-          "Type": "AWS::EC2::SubnetRouteTableAssociation",
-          "DependsOn" : ["rtPublic","snSpinUpDbC"],
-          "Properties": {
-            "RouteTableId": {"Ref":"rtPrivate"},
-            "SubnetId": {"Ref":"snSpinUpDbC"}
-          }
-        }
-    },
-    "Outputs": {
-
-    }
-}
+---
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 3 zone/3 tier /24 subnet VPC configuration | Public/App/DB
+Metadata: {}
+Parameters: {}
+Mappings: {}
+Conditions: {}
+Resources:
+  vpcSpinUp:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+      - Key: Name
+        Value: vpcSpinUp
+  snSpinUpPublicA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1a
+      VpcId:
+        Ref: vpcSpinUp
+      CidrBlock: 10.0.0.0/24
+      Tags:
+      - Key: Name
+        Value: Public Subnet Zone A
+  snSpinUpPublicB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1b
+      VpcId:
+        Ref: vpcSpinUp
+      CidrBlock: 10.0.1.0/24
+      Tags:
+      - Key: Name
+        Value: Public Subnet Zone B
+  snSpinUpPublicC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1c
+      VpcId:
+        Ref: vpcSpinUp
+      CidrBlock: 10.0.2.0/24
+      Tags:
+      - Key: Name
+        Value: Public Subnet Zone C
+  snSpinUpAppA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1a
+      VpcId:
+        Ref: vpcSpinUp
+      CidrBlock: 10.0.10.0/24
+      Tags:
+      - Key: Name
+        Value: Private App Subnet Zone A
+  snSpinUpAppB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1b
+      VpcId:
+        Ref: vpcSpinUp
+      CidrBlock: 10.0.11.0/24
+      Tags:
+      - Key: Name
+        Value: Private App Subnet Zone B
+  snSpinUpAppC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1c
+      VpcId:
+        Ref: vpcSpinUp
+      CidrBlock: 10.0.12.0/24
+      Tags:
+      - Key: Name
+        Value: Private App Subnet Zone C
+  snSpinUpDbA:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1a
+      VpcId:
+        Ref: vpcSpinUp
+      CidrBlock: 10.0.20.0/24
+      Tags:
+      - Key: Name
+        Value: Private DB Subnet Zone A
+  snSpinUpDbB:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1b
+      VpcId:
+        Ref: vpcSpinUp
+      CidrBlock: 10.0.21.0/24
+      Tags:
+      - Key: Name
+        Value: Private DB Subnet Zone B
+  snSpinUpDbC:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: eu-west-1c
+      VpcId:
+        Ref: vpcSpinUp
+      CidrBlock: 10.0.22.0/24
+      Tags:
+      - Key: Name
+        Value: Private DB Subnet Zone C
+  igwSpinUp:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+      - Key: Name
+        Value: SpinUp VPC Internet Gateway
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId:
+        Ref: vpcSpinUp
+      InternetGatewayId:
+        Ref: igwSpinUp
+  rtPublic:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: vpcSpinUp
+      Tags:
+      - Key: Name
+        Value: Public Routing Table
+  rtPrivate:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId:
+        Ref: vpcSpinUp
+      Tags:
+      - Key: Name
+        Value: Private Routing Table
+  rtaSpinUpPublicA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+    - rtPublic
+    - snSpinUpPublicA
+    Properties:
+      RouteTableId:
+        Ref: rtPublic
+      SubnetId:
+        Ref: snSpinUpPublicA
+  rtaSpinUpPublicB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+    - rtPublic
+    - snSpinUpPublicB
+    Properties:
+      RouteTableId:
+        Ref: rtPublic
+      SubnetId:
+        Ref: snSpinUpPublicB
+  rtaSpinUpPublicC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+    - rtPublic
+    - snSpinUpPublicC
+    Properties:
+      RouteTableId:
+        Ref: rtPublic
+      SubnetId:
+        Ref: snSpinUpPublicC
+  rtaSpinUpAppA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+    - rtPublic
+    - snSpinUpAppA
+    Properties:
+      RouteTableId:
+        Ref: rtPrivate
+      SubnetId:
+        Ref: snSpinUpAppA
+  rtaSpinUpAppB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+    - rtPublic
+    - snSpinUpAppB
+    Properties:
+      RouteTableId:
+        Ref: rtPrivate
+      SubnetId:
+        Ref: snSpinUpAppB
+  rtaSpinUpAppC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+    - rtPublic
+    - snSpinUpAppC
+    Properties:
+      RouteTableId:
+        Ref: rtPrivate
+      SubnetId:
+        Ref: snSpinUpAppC
+  rtaSpinUpDbA:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+    - rtPublic
+    - snSpinUpDbA
+    Properties:
+      RouteTableId:
+        Ref: rtPrivate
+      SubnetId:
+        Ref: snSpinUpDbA
+  rtaSpinUpDbB:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+    - rtPublic
+    - snSpinUpDbB
+    Properties:
+      RouteTableId:
+        Ref: rtPrivate
+      SubnetId:
+        Ref: snSpinUpDbB
+  rtaSpinUpDbC:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    DependsOn:
+    - rtPublic
+    - snSpinUpDbC
+    Properties:
+      RouteTableId:
+        Ref: rtPrivate
+      SubnetId:
+        Ref: snSpinUpDbC
+Outputs: {}
