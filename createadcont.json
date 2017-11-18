@@ -2,6 +2,12 @@ AWSTemplateFormatVersion: '2010-09-09'
 Description: Windows Server 2012 Base for App-A subnet
 Metadata: {}
 Parameters:
+  Ec2KeyName:
+   Type: String
+    Default: amazonami
+ Ec2InstanceType:
+    Type: String
+    Default: ts.small
   AmiId:
     Type: String
     Default: ami-b7e93bce
@@ -39,7 +45,8 @@ Resources:
   ADEC2Instance:
     Type: AWS::EC2::Instance
     Properties:
-      KeyName: amazonami
+      KeyName: 
+        Ref: Ec2KeyName
       ImageId:
        Ref: AmiId
       InstanceType: t2.small
