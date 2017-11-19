@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Windows Server 2012 Base for App-A subnet
+Description: Windows Server 2012 Base for DB-B subnet
 Metadata: {}
 Parameters:
   Ec2KeyName:
@@ -42,7 +42,7 @@ Parameters:
     Type: String
     Default: subnet-b186d0d6
 Resources:
-  SqlInstance1:
+  SqlInstance2:
     Type: AWS::EC2::Instance
     Properties:
       KeyName: 
@@ -52,7 +52,7 @@ Resources:
       InstanceType: t2.small
       Tags:
       - Key: Name
-        Value: SQL1
+        Value: SQL2
       - Key: Type
         Value: SQL Node
       UserData:
@@ -67,9 +67,9 @@ Resources:
         GroupSet:
         - Ref: Ec2SecurityGroup
         SubnetId:
-         Ref: PriDBZoneA
+         Ref: PriDBZoneB
 Outputs:
   InstanceID:
     Description: The Instance ID
     Value:
-      Ref: SqlInstance1
+      Ref: SqlInstance2
