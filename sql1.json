@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Windows Server 2012 Base for App-A subnet
+Description: Windows Server 2012 Base for DB-A subnet
 Metadata: {}
 Parameters:
   Ec2KeyName:
