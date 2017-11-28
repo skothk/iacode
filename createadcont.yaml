@@ -1,0 +1,78 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: Windows Server 2012 Base for App-A subnet
+
+Parameters:
+  Ec2KeyName:
+    Type: String
+    Default: amazonami
+ Ec2InstanceType:
+    Type: String
+    Default: ts.small
+  AmiId:
+    Type: String
+    Default: ami-b7e93bce
+  Ec2SecurityGroup:
+    Type: String
+    Default: sg-6dfc3216
+  PubSubZoneA:
+    Type: String
+    Default: subnet-c5bbe38c
+  PubSubZoneB:
+    Type: String
+    Default: subnet-28c75573
+  PubSubZoneC:
+    Type: String
+    Default: subnet-1a86d07d
+  PriAppZoneA:
+    Type: String
+    Default: subnet-46bde50f
+  PriAppZoneB:
+    Type: String
+    Default: subnet-97c85acc
+  PriAppZoneC:
+    Type: String
+    Default: subnet-5f80d638
+  PriDBZoneA:
+    Type: String
+    Default: subnet-c2bee68b
+  PriDBZoneB:
+    Type: String
+    Default: subnet-5bc05200
+  PriDBZoneC:
+    Type: String
+    Default: subnet-b186d0d6
+
+Resources:
+  ADEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: 
+        Ref: Ec2KeyName
+      ImageId:
+        Ref: AmiId
+      InstanceType: t2.small
+      Tags:
+      - Key: Name
+        Value: DC1
+      - Key: Type
+        Value: Domain Controller
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+          - ''
+          - - '<powershell>'
+            - '</powershell>'
+      NetworkInterfaces:
+      - AssociatePublicIpAddress: 'true'
+        DeviceIndex: '0'
+        GroupSet:
+        - Ref: Ec2SecurityGroup
+        SubnetId:
+         Ref: PriAppZoneA
+
+Outputs:
+  InstanceID:
+    Description: The Instance ID
+    Value:
+      Ref: ADEC2Instance
