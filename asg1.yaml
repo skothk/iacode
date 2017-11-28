@@ -21,7 +21,7 @@ Parameters:
   InstanceCountMax:
     Description: Maximum number of EC2 instances to launch
     Type: Number
-    Default: '3'
+    Default: '1'
   InstanceImageId:
     Description: Image ID for EC2 instances
     Type: String
