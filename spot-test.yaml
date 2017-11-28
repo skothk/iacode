@@ -1,0 +1,58 @@
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation Template Creates a spot request for fleet of 5 m1.small instances with bid price 0.02 USD + ssm hybrid agent'
+Resources:
+  SpotFleet:
+    Type: AWS::EC2::SpotFleet
+    Properties:
+      SpotFleetRequestConfigData:
+        IamFleetRole: arn:aws:iam::827259156080:role/aws-ec2-spot-fleet-tagging-role
+        AllocationStrategy: lowestPrice
+        TargetCapacity: 5
+        SpotPrice: '0.04'
+        ValidFrom: '2017-11-27T11:12:42Z'
+        ValidUntil: '2018-11-26T11:12:42Z'
+        TerminateInstancesWithExpiration: true
+        LaunchSpecifications:
+        - ImageId: ami-e92fec90
+          InstanceType: m1.small
+          KeyName: amazonami
+          SpotPrice: '0.02'
+          IamInstanceProfile:
+            Arn: arn:aws:iam::827259156080:instance-profile/Role-EC2
+          BlockDeviceMappings:
+          - DeviceName: "/dev/sda1"
+            Ebs:
+              DeleteOnTermination: true
+              VolumeType: gp2
+              VolumeSize: 30
+              SnapshotId: snap-0941fa7ed08fc5de5
+          UserData:
+            Fn::Base64:
+              Fn::Join:
+                - ''
+                - - "<script>"
+                  - "\n"
+                  - $dir = $env:TEMP + "\ssm"
+                  - "\n"
+                  - powershell.exe -ExecutionPolicy RemoteSigned -Command New-Item -ItemType directory -Path $dir
+                  - "\n"
+                  - cd $dir
+                  - "\n"
+                  - (New-Object System.Net.WebClient).DownloadFile("https://amazon-ssm-eu-west-1.s3.amazonaws.com/latest/windows_amd64/AmazonSSMAgentSetup.exe", $dir + "\AmazonSSMAgentSetup.exe")
+                  - "\n" 
+                  - Start-Process .\AmazonSSMAgentSetup.exe -ArgumentList @("/q", "/log", "install.log", "CODE=+zhjWItrAakRFfbuNJlz", "ID=0b6a1abc-53a2-423d-9382-4158fd01fba8", "REGION=eu-west-1”) -Wait
+                  - "\n"
+                  - Get-Content ($env:ProgramData + "\Amazon\SSM\InstanceData\registration")
+                  - "\n"
+                  - Get-Service -Name "AmazonSSMAgent"
+                  - "</script>"
+          NetworkInterfaces:
+          - DeviceIndex: 0
+            SubnetId: subnet-c5bbe38c
+            DeleteOnTermination: true
+            Groups:
+            - sg-6dfc3216
+            AssociatePublicIpAddress: true
+        Type: request
+

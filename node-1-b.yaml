@@ -1,0 +1,146 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Windows Server 2017 Base /w WSFC and Domain Joined wfsc-node-1-b in zone B
+Metadata: {}
+Parameters:
+  DomainAdminUser:
+    Description: User name for the account that will be added as Domain Administrator.
+      This is separate from the default "Administrator" account and should not include the domain prefix e.g. desktop.local\
+    Type: String
+    Default: 
+    MinLength: '1'
+    MaxLength: '25'
+    AllowedPattern: "[a-zA-Z0-9]*"
+  DomainAdminPassword:
+    Description: Password for the domain admin user. Must be at least 8 characters
+      containing letters, numbers and symbols
+    Type: String
+    MinLength: '8'
+    MaxLength: '32'
+    AllowedPattern: "(?=^.{6,255}$)((?=.*\\d)(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[^A-Za-z0-9])(?=.*[a-z])|(?=.*[^A-Za-z0-9])(?=.*[A-Z])(?=.*[a-z])|(?=.*\\d)(?=.*[A-Z])(?=.*[^A-Za-z0-9]))^.*"
+    NoEcho: 'true'
+  DomainNetBIOSName:
+    Description: NetBIOS name of the domain (upto 15 characters) for users of earlier
+      versions of Windows e.g. domain
+    Type: String
+  DomainName:
+    Description: Enter Domain Name to Join | domain.local
+    Type: String
+  Ec2Name:
+    Description: Enter WSFC Node Name | wsfc-node-[0-9]-[a-b]
+    Type: String
+  Ec2KeyName:
+    Description: Enter EC2 Key Pair
+    Type: AWS::EC2::KeyPair::KeyName
+  Ec2InstanceType:
+    Description: Enter EC2 Instance Type
+    Type: String
+    Default: m4.large
+  AmiId:
+    Description: Enter AMI Name
+    Type: String
+    Default: ami-1ecc1e67
+  WSFCNodePrivateIp:
+    Description: Primary private IP for SQL Node (dev 192.168.2.* = zone A | 192.168.3.* = zone B)
+    Type: String
+    Default: 192.168.3.20
+  WSFCNodePrivateIp2:
+    Description: Secondary private IP for WSFC cluster on SQL Node (dev 192.168.2.* = zone A | 192.168.3.* = zone B)
+    Type: String
+    Default: 192.168.3.21
+  WSFCNodePrivateIp3:
+    Description: Third private IP for Availability Group Listner on SQL Node (dev 192.168.2.* = zone A | 192.168.3.* = zone B)
+    Type: String
+    Default: 192.168.3.22
+  TargetSubnet:
+    Description: Enter Availbility Zone Subnet name
+    Type: AWS::EC2::Subnet::Id
+Resources:
+  sql1b:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: 
+        Ref: Ec2KeyName
+      ImageId:
+        Ref: AmiId
+      InstanceType:
+        Ref: Ec2InstanceType
+      NetworkInterfaces:
+      - DeleteOnTermination: 'true'
+        DeviceIndex: 0
+        SubnetId:
+          Ref: TargetSubnet
+        PrivateIpAddresses:
+        - Primary: 'true'
+          PrivateIpAddress:
+            Ref: WSFCNodePrivateIp
+        - Primary: 'false'
+          PrivateIpAddress:
+            Ref: WSFCNodePrivateIp2
+        - Primary: 'false'
+          PrivateIpAddress:
+            Ref: WSFCNodePrivateIp3
+        GroupSet:
+        - sg-1d8df17a
+        - sg-8f314ce8
+        - sg-e1e1519a
+        - sg-ec359697
+      Tags:
+      - Key: Name
+        Value: 
+          Ref: Ec2Name
+      - Key: Type
+        Value: SQL Node
+      - Key: sqlcluster
+        Value: sqlcluster02
+      UserData:
+        Fn::Base64:
+          Fn::Join:
+            - ''
+            - - "<script>\n"
+              - powershell.exe -ExecutionPolicy RemoteSigned -Command "Install-WindowsFeature -Name Failover-Clustering -IncludeManagementTools"
+              - "\n"
+              - powershell.exe -ExecutionPolicy RemoteSigned -Command
+              - ' "'
+              - Add-Computer -DomainName 
+              - ' '
+              - Ref: DomainName
+              - " -Credential "
+              - "(New-Object System.Management.Automation.PSCredential('"
+              - Ref: DomainNetBIOSName
+              - "\\"
+              - Ref: DomainAdminUser
+              - "',"
+              - '(ConvertTo-SecureString '
+              - "'"
+              - Ref: DomainAdminPassword
+              - "'"
+              - ' -AsPlainText -Force))) '
+              - '-NewName '
+              - "'"
+              - Ref: Ec2Name
+              - "'"
+              - ' -Restart'
+              - '"'
+              - "\n"
+              - "</script>"
+Outputs:
+  InstanceID:
+    Description: The instance id
+    Value:
+      Ref: sql1b
+  EC2InstanceName:
+    Description: The instances name
+    Value:
+      Ref: Ec2Name
+  PriIP:
+    Description: The instances primary IP
+    Value:
+      Ref: WSFCNodePrivateIp
+  SecIP:
+    Description: The instances Windows Server Failover Cluster IP
+    Value:
+      Ref: WSFCNodePrivateIp2
+  TerIP:
+    Description: The instances Always On Listener IP
+    Value:
+      Ref: WSFCNodePrivateIp3
