@@ -17,9 +17,9 @@ Metadata:
         Parameters:
           - SecurityGroup1
           - SecurityGroup2
-          - SecurityGroup3
-          - SecurityGroup4
-          - SecurityGroup5
+          # - SecurityGroup3
+          # - SecurityGroup4
+          # - SecurityGroup5
       -
         Label:
           default: "EC2 Configuration"
@@ -52,15 +52,15 @@ Parameters:
   SecurityGroup2:
     Description: ALB Security group 2 (type ahead to filter group list)
     Type: AWS::EC2::SecurityGroup::Id
-  SecurityGroup3:
-    Description: ALB Security group 3 (type ahead to filter group list)
-    Type: AWS::EC2::SecurityGroup::Id
-  SecurityGroup4:
-    Description: ALB Security group 4 (type ahead to filter group list)
-    Type: AWS::EC2::SecurityGroup::Id
-  SecurityGroup5:
-    Description: ALB Security group 5 (type ahead to filter group list)
-    Type: AWS::EC2::SecurityGroup::Id
+  # SecurityGroup3:
+  #   Description: ALB Security group 3 (type ahead to filter group list)
+  #   Type: AWS::EC2::SecurityGroup::Id
+  # SecurityGroup4:
+  #   Description: ALB Security group 4 (type ahead to filter group list)
+  #   Type: AWS::EC2::SecurityGroup::Id
+  # SecurityGroup5:
+  #   Description: ALB Security group 5 (type ahead to filter group list)
+  #   Type: AWS::EC2::SecurityGroup::Id
 
   InstanceType:
     Description: Select EC2 instance type (Limited Selection)
@@ -70,8 +70,8 @@ Parameters:
     - t2.nano
     - t2.micro
   InstanceImageId:
-    Description: Imput AMI Id
-    Default: ami-e92fec90
+    Description: Input AMI Id
+    Default: ami-1a962263
     Type: String
   KeyName:
     Description: Select EC2 KeyPair
@@ -79,49 +79,57 @@ Parameters:
   InstanceCount:
     Description: Number of EC2 instances to launch
     Type: Number
-    Default: 1
-    MaxValue: 5
+    Default: '1'
+    MaxValue: '5'
   InstanceCountMin:
-    Description: Maximum number of EC2 instances to launch
+    Description: Minimum number of EC2 instances to launch
     Type: Number
-    Default: 1
-    MaxValue: 1
+    Default: '1'
+    MaxValue: '1'
   InstanceCountMax:
     Description: Maximum number of EC2 instances to launch
     Type: Number
-    Default: 1
-    MaxValue: 5
+    Default: '1'
+    MaxValue: '5'
 
 Resources:
-  AppServerGroup:
+  AppASG:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier:
-        - !Ref TargetSubnetA
-        - !Ref TargetSubnetB
-      LaunchConfigurationName: !Ref  AppLaunchConfig
-      DesiredCapacity: !Ref  InstanceCount
-      MinSize: !Ref InstanceCountMin
-      MaxSize: !Ref InstanceCountMax
-      LoadBalancerNames:
-        - !Ref AppLoadBalancer
+        - Ref: TargetSubnetA
+        - Ref: TargetSubnetB
+      LaunchConfigurationName:
+        Ref: AppLaunchConfig
+      DesiredCapacity:
+        Ref: InstanceCount
+      MinSize:
+        Ref: InstanceCountMin
+      MaxSize:
+        Ref: InstanceCountMax
       HealthCheckGracePeriod: '300'
       HealthCheckType: ELB
-    CreationPolicy:
-      ResourceSignal:
-        Count: !Ref InstanceCount
-        Timeout: PT5M
-    UpdatePolicy:
-      AutoScalingReplacingUpdate:
-        WillReplace: 'true'
+      Tags:
+        - Key: SsmManaged
+          Value: windows
+          PropagateAtLaunch: 'true'
+        - Key: Patch Group
+          Value: Web Server
+          PropagateAtLaunch: 'true'
 
   AppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
-      AssociatePublicIpAddress: 'true'
-      ImageId: !Ref InstanceImageId
-      InstanceType: !Ref InstanceType
-      KeyName: !Ref KeyName
+      AssociatePublicIpAddress: 'false'
+      ImageId:
+        Ref: InstanceImageId
+      InstanceType:
+        Ref: InstanceType
+      KeyName:
+        Ref: KeyName
+      SecurityGroups:
+        - Ref: SecurityGroup1
+        - Ref: SecurityGroup2
       # UserData:
 
   AppLoadBalancer:
@@ -129,33 +137,34 @@ Resources:
     Properties:
       Scheme: internal
       Subnets:
-        - !Ref TargetSubnetA
-        - !Ref TargetSubnetB
+        - Ref: TargetSubnetA
+        - Ref: TargetSubnetB
       LoadBalancerAttributes:
         - Key: idle_timeout.timeout_seconds
           Value: '50'
       SecurityGroups:
-        - !Ref SecurityGroup1
-        - !Ref SecurityGroup2
-        - !Ref SecurityGroup3
-        - !Ref SecurityGroup4
-        - !Ref SecurityGroup5
-      Tags:
-      - Key: key
-        Value: value
-      - Key: key2
-        Value: value2
+        - Ref: SecurityGroup1
+        - Ref: SecurityGroup2
+        # - Ref: SecurityGroup3
+        # - Ref: SecurityGroup4
+        # - Ref: SecurityGroup5
 
-Outputs:
-  AccouuntId:
-    Description: Stack Deployed in Account
-    Value: AWS::AccountId
-  StackId:
-    Description: Stack Id
-    Value: AWS::StackId
-  StackName:
-    Description: Stack Name
-    Value: AWS:StackName
-  DeployedRegion:
-    Description: Stack Deployed in Region
-    Value: AWS::Region
+#Outputs:
+#  AccouuntId:
+#    Description: Stack Deployed in Account
+#    Value: AWS::AccountId
+#  StackId:
+#    Description: Stack Id
+#    Value: AWS::StackId
+#  StackName:
+#    Description: Stack Name
+#    Value: AWS:StackName
+#  DeployedRegion:
+#    Description: Stack Deployed in Region
+#    Value: AWS::Region
+#  ASGName:
+#    Description: ASG Name
+#    Value: !GetAtt AppServerGroup.LoadBalancerNames
+#  ASGInstance:
+#    Description: Initial Instance Ids
+#    Value: !GetAtt AppServerGroup.LoadBalancerNames
