@@ -1,15 +1,76 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: HA Will Replace Example
+Description: ASG Demo MaxCount 1 (default)
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label:
+          default: "Network Configuration"
+        Parameters:
+          - TargetVPC
+          - TargetSubnetA
+          - TargetSubnetB
+          - SecurityGroup1
+          - SecurityGroup2
+          - SecurityGroup3
+          - SecurityGroup4
+          - SecurityGroup5
+      -
+        Label:
+          default: "Amazon EC2 Configuration"
+        Parameters:
+          - InstanceType
+          - InstanceImageId
+          - KeyName
+          - InstanceCount
+          - InstanceCountMax
+
+    ParameterLabels:
+      VPCID:
+        default: "Which VPC should this be deployed to?"
 
 Parameters:
+
+  TargetVPC:
+    ConstraintDescription: must be the name of a VPC Id
+    Type: AWS::EC2::VPC::Id
+  TargetSubnetA:
+    Description: Subnet Id
+    Type: AWS::EC2::Subnet::Id
+    ConstraintDescription: must be the name of an existing VPC Subnet
+  TargetSubnetB:
+    Description: Subnet Id
+    Type: AWS::EC2::Subnet::Id
+  SecurityGroup1:
+    ConstraintDescription: Must select at least one security group to assign to this ALB
+    Description: ALB Security group 2
+    Type: AWS::EC2::SecurityGroup::Id
+  SecurityGroup2:
+    Description: ALB Security group 2
+    Type: AWS::EC2::SecurityGroup::Id
+  SecurityGroup3:
+    Description: ALB Security group 3
+    Type: AWS::EC2::SecurityGroup::Id
+  SecurityGroup4:
+    Description: ALB Security group 4
+    Type: AWS::EC2::SecurityGroup::Id
+  SecurityGroup5:
+    Description: ALB Security group 5
+    Type: AWS::EC2::SecurityGroup::Id
+
   InstanceType:
-    Description: WebServer EC2 instance type
+    Description: EC2 instance type (Limited Selection)
     Type: String
     Default: t2.nano
     AllowedValues:
     - t2.nano
     - t2.micro
     ConstraintDescription: must be a valid EC2 instance type.
+  InstanceImageId:
+    Default: ami-e92fec90
+    Type: String
+    ConstraintDescription: Image ID for EC2 instances
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: AWS::EC2::KeyPair::KeyName
@@ -18,36 +79,28 @@ Parameters:
     Description: Number of EC2 instances to launch
     Type: Number
     Default: '1'
+  InstanceCountMin:
+    Description: Maximum number of EC2 instances to launch
+    Type: Number
+    Default: '1'
   InstanceCountMax:
     Description: Maximum number of EC2 instances to launch
     Type: Number
     Default: '1'
-  InstanceImageId:
-    Description: Image ID for EC2 instances
-    Type: String
-    Default: ami-1a962263
-  TargetSubnetA:
-    Description: Subnet Id
-    Type: AWS::EC2::Subnet::Id
-    ConstraintDescription: must be the name of an existing VPC Subnet
-  TargetSubnetB:
-    Description: Subnet Id
-    Type: AWS::EC2::Subnet::Id
-    ConstraintDescription: must be the name of an existing VPC Subnet
 
 Resources:
-  WebServerGroup:
+  AppServerGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
       VPCZoneIdentifier:
         - !Ref TargetSubnetA
         - !Ref TargetSubnetB
-      LaunchConfigurationName: !Ref  WebLaunchConfig
+      LaunchConfigurationName: !Ref  AppLaunchConfig
       DesiredCapacity: !Ref  InstanceCount
-      MinSize: 1
+      MinSize: !Ref InstanceCountMin
       MaxSize: !Ref InstanceCountMax
       LoadBalancerNames:
-        - !Ref WebElasticLoadBalancer
+        - !Ref AppLoadBalancer
       HealthCheckGracePeriod: '300'
       HealthCheckType: ELB
     CreationPolicy:
@@ -58,32 +111,34 @@ Resources:
       AutoScalingReplacingUpdate:
         WillReplace: 'true'
 
-  WebLaunchConfig:
+  AppLaunchConfig:
     Type: AWS::AutoScaling::LaunchConfiguration
     Properties:
       AssociatePublicIpAddress: 'true'
       ImageId: !Ref InstanceImageId
       InstanceType: !Ref InstanceType
       KeyName: !Ref KeyName
-      UserData:
-        Fn::Base64: !Sub |
-          #!/bin/bash
-          yum update
-          yum install -y aws-cfn-bootstrap
-          /opt/aws/bin/cfn-init --resource WebLaunchConfig --stack ${AWS::StackName} --region ${AWS::Region}
-          yum install -y nginx
-          service nginx start
-          /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackName} --resource WebServerGroup --region ${AWS::Region}
+      # UserData:
 
-  WebElasticLoadBalancer:
-    Type: AWS::ElasticLoadBalancing::LoadBalancer
+  AppLoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      CrossZone: 'false'
-      Scheme: internet-facing
+      Scheme: internal
       Subnets:
         - !Ref TargetSubnetA
         - !Ref TargetSubnetB
-      Listeners:
-        - LoadBalancerPort: '80'
-          InstancePort: '80'
-          Protocol: HTTP
+      LoadBalancerAttributes:
+      - Key: idle_timeout.timeout_seconds
+        Value: '50'
+      SecurityGroups:
+         - Ref: SecurityGroup1
+         - Ref: SecurityGroup2
+         - Ref: SecurityGroup3
+         - Ref: SecurityGroup4
+         - Ref: SecurityGroup5
+      Tags:
+      - Key: key
+        Value: value
+      - Key: key2
+        Value: value2
+
