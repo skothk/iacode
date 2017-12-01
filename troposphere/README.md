@@ -22,3 +22,4 @@ Troposphere install guide for AWS Cloud9
 5. sudo yum -y install python-pip
 6. sudo pip install troposphere
 7. sudo yum update -y
+8. code, commit, push :)
