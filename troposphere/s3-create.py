@@ -21,5 +21,8 @@ t.add_output(Output(
     Description="Name of S3 bucket to hold website content"
 ))
 
+# For JSON
 #print(t.to_json())
+
+# For YAML
 print(yaml.safe_dump(json.loads(t.to_json()), None, allow_unicode=True))
