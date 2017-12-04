@@ -21,6 +21,9 @@ Troposphere install guide for AWS Cloud9
 4. git config --global user.email "EMAIL"
 5. git clone https://github.com/REPO
 6. sudo yum -y install python-pip
-7. sudo pip install troposphere
-8. sudo yum update -y
-9. code, commit, push :)
+7. sed -E -i -e 's:PATH=(.*):PATH=/etc/alternatives\:\1:g' ~/.bashrc
+8. sed -E -i -e 's:^alias python=(.*):#alias python=\1:g' ~/.bashrc             
+9. sudo alternatives --set python /usr/bin/python3.6
+10. sudo pip install boto troposphere[policy]
+11. sudo yum update -y
+12. code, commit, push :)
