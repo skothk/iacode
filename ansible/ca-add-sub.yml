@@ -1,0 +1,36 @@
+- hosts: tag_Service_Certificate_Authority_Root
+  gather_facts: no
+  vars_files:
+  - "group_vars/windows.yml"
+
+  tasks:
+  - name: Add Windows Feature Certificate Authority
+    win_feature:
+      name: Adcs-Cert-Authority
+      state: present
+      include_sub_features: True
+      include_management_tools: True
+    register: feature_state
+
+  - debug: var=feature_state
+
+  - name: rebooting if state is reboot_required
+    win_reboot:
+    when: feature_state.reboot_required
+
+  - name: waiting for instance reboot to complete
+    wait_for_connection:
+
+  - name: Set CA to StandaloneRootCa
+    win_shell: |
+      $FeatName = "ADCS-Cert-Authority, ADCS-Web-Enrollment, Web-Default-Doc, Web-Dir-Browsing, Web-Http-Errors, Web-Static-Content, Web-Http-Redirect, Web-Http-Logging, Web-Log-Libraries, Web-Request-Monitor, Web-Http-Tracing, Web-Stat-Compression, Web-Filtering, Web-Windows-Auth, Web-ASP, Web-ISAPI-Ext"
+      $WinFeat = Get-WindowsFeature -Name $FeatName | Where installed
+      if ($WinFeat -EQ $null) {
+          Install-AdcsCertificationAuthority -CAType StandaloneRootCa -Confirm:$false -Force
+          Add-WindowsFeature $FeatName
+      } else {
+        "echo $FeatName is installed"
+      }    
+    register: srca_state
+
+  - debug: var=srca_state

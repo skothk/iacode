@@ -1,0 +1,19 @@
+- hosts: tag_DomainJoin_No
+  gather_facts: no
+  vars_files:
+  - "group_vars/domain.yml"
+
+  tasks:
+  - name: Join any computers to domain with tag DomainJoin=No
+    win_domain_membership:
+      dns_domain_name: test.local
+      hostname: tag_Name
+      domain_admin_user: "{{ domain_user }}"
+      domain_admin_password: "{{ domain_pass }}"
+      state: domain
+    register: domain_state
+
+  - win_reboot:
+    when: domain_state.reboot_required
+
+  - wait_for_connection:
