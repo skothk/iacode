@@ -1,0 +1,10 @@
+- hosts: tag_OS_Windows
+  group_vars:
+  - groups_vars/domain.yml
+
+- tasks:
+  name: ping windows instances
+  win_ping:
+  register: ping_state
+
+- debug: var=ping_state
